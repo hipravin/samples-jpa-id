@@ -13,7 +13,7 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 @SpringBootTest
-class JdbcItemRepositotyImplTest {
+class JdbcItemRepositotyImplIT {
     @Autowired
     JdbcItemRepositoryImpl jdbcItemRepositoty;
 

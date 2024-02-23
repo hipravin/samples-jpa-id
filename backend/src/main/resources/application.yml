@@ -3,9 +3,9 @@ spring:
     name: post-data-service
 
   datasource:
-    url: ${REPO_DB_URL}
-    username: ${REPO_DB_USER}
-    password: ${REPO_DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/playground?currentSchema=samplesjpaid&reWriteBatchedInserts=true
+    username: postgres
+    password: admin
 
   jpa:
     properties:
@@ -13,7 +13,7 @@ spring:
         default_schema: "samplesjpaid"
         order_inserts: true
         order_updates: true
-#          generate_statistics: true
+#        generate_statistics: true
         jdbc:
           batch_size: 100
           time_zone: UTC
@@ -25,11 +25,8 @@ spring:
 logging:
   level:
     hipravin.samples: DEBUG
-    #    org.hibernate.SQL: DEBUG
-    #    org.hibernate.type.descriptor.sql: TRACE
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
     org.springframework: DEBUG
+#    org.springframework: INFO
 
-REPO_DB_URL: jdbc:postgresql://localhost:5432/playground?reWriteBatchedInserts=true
-#REPO_DB_URL: jdbc:postgresql://localhost:5432/playground
-REPO_DB_USER: postgres
-REPO_DB_PASSWORD: admin
