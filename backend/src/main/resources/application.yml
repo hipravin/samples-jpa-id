@@ -25,8 +25,8 @@ spring:
 logging:
   level:
     hipravin.samples: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    org.springframework: DEBUG
-#    org.springframework: INFO
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql: TRACE
+#    org.springframework: DEBUG
+    org.springframework: INFO
 

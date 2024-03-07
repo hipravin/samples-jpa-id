@@ -1,8 +1,17 @@
 create schema samplesjpaid;
 set search_path to samplesjpaid,public;
 
+select now();
+select clock_timestamp();
+
+select * from account;
+
 insert into ITEM (ID, NAME, DESCRIPTION)
-    select id, 'name' || id, 'stub description for ' || id from generate_series(1, 1048576) as id;
+    select id, 'name' || id, 'stub description for ' || id from generate_series(1, 1000000) as id;
+
+SELECT * FROM ITEM FETCH FIRST 3 ROWS ONLY OFFSET 10;
+
+SELECT * FROM ITEM TABLESAMPLE bernoulli(10) FETCH FIRST 3 ROWS ONLY OFFSET 10;
 
 insert into ITEM (ID, DESCRIPTION)
 select id, 'stub description for 1' from generate_series(1, 1000000) as id;
@@ -44,41 +53,75 @@ truncate table item;
 delete from item where 1=1;
 
 SELECT pg_size_pretty(pg_relation_size('item'));
-
-COPY item FROM '/usr/share/import/items.txt';
+COPY item FROM '/usr/share/import/items.txt'; --1,000,000 rows affected in 8 s 693 ms
 
 select count(*) from item;
 
 select * from item;
 
-CREATE TABLE ITEM
-(
-    ID          BIGINT PRIMARY KEY,
-    DESCRIPTION TEXT NOT NULL
+---
+
+CREATE INDEX idx_id_gist ON item USING gist(id);
+drop index idx_id_gist;
+
+explain analyze
+SELECT *
+FROM item
+ORDER BY id <-> 15648
+LIMIT 6;
+
+
+--- locking
+CREATE TABLE ACCOUNT (
+    id bigserial primary key,
+    amount bigint not null default 1000
 );
 
-CREATE TABLE ITEM_UUID_AUTO
-(
-    ID          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    DESCRIPTION TEXT NOT NULL
-);
+select * from account;
 
-CREATE TABLE ITEM_UUID
-(
-    ID          UUID PRIMARY KEY,
-    DESCRIPTION TEXT NOT NULL
-);
+select id, sum(amount) from account group by rollup (1);
 
-CREATE TABLE ITEM_NUMERIC_AUTO
-(
-    ID          BIGSERIAL PRIMARY KEY,
-    DESCRIPTION TEXT NOT NULL
-);
 
-CREATE TABLE ITEM_NUMERIC
-(
-    ID          BIGSERIAL PRIMARY KEY,
-    DESCRIPTION TEXT NOT NULL
-);
+update account set amount = 1000 where 1=1;
 
-ALTER SEQUENCE ITEM_NUMERIC_ID_SEQ INCREMENT BY 100 RESTART 100;
+
+insert into account (amount) values (1000), (1000), (1000);
+
+ROLLBACK;
+
+BEGIN;
+    update samplesjpaid.account set amount = amount - 1 where id = 1;
+    update samplesjpaid.account set amount = amount + 1 where id = 2;
+COMMIT;
+
+BEGIN;
+    update samplesjpaid.account set amount = amount - 1 where id = 2;
+    update samplesjpaid.account set amount = amount + 1 where id = 3;
+COMMIT;
+
+BEGIN;
+    update samplesjpaid.account set amount = amount - 1 where id = 3;
+    update samplesjpaid.account set amount = amount + 1 where id = 1;
+COMMIT;
+
+select * from samplesjpaid.account where id in (1,2,3) FOR NO KEY UPDATE;
+
+select * from samplesjpaid.account;
+
+
+
+--pgbench -r -U postgres -t 10000 -f /usr/share/import/bench-0.sql -c 8 -j 2 playground
+--pgbench -r -U postgres -t 10000 -f /usr/share/import/bench-2.sql -c 8 -j 2 playground
+
+--PGOPTIONS='-c default_transaction_isolation=serializable' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-1.sql -c 8 -j 2 playground
+--PGOPTIONS='-c default_transaction_isolation=repeatable\ read' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-1.sql -c 8 -j 2 playground
+
+--PGOPTIONS='-c default_transaction_isolation=repeatable\ read' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-1.sql -c 8 -j 2 playground
+
+--PGOPTIONS='-c default_transaction_isolation=repeatable\ read' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-4.sql -c 8 -j 1 playground
+--PGOPTIONS='-c default_transaction_isolation=read\ committed' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-4.sql -c 8 -j 2 playground
+
+--PGOPTIONS='-c default_transaction_isolation=read\ committed' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-6.sql -c 8 -j 1 playground
+--PGOPTIONS='-c default_transaction_isolation=repeatable\ read' pgbench -r -U postgres -t 1000 -f /usr/share/import/bench-6.sql -c 8 -j 1 playground
+--PGOPTIONS='-c default_transaction_isolation=repeatable\ read' pgbench -r -U postgres -t 10 -f /usr/share/import/bench-6.sql -c 2 -j 1 playground --verbose-errors
+
