@@ -80,9 +80,19 @@ CREATE TABLE ACCOUNT (
 select * from account;
 
 select id, sum(amount) from account group by rollup (1);
-
-
 update account set amount = 1000 where 1=1;
+
+SELECT pg_advisory_lock(1);
+SELECT pg_advisory_xact_lock(1);
+select pg_advisory_unlock(1);
+
+select pg_backend_pid();
+
+SELECT * FROM pg_locks WHERE pid = pg_backend_pid() AND locktype = 'advisory';
+
+SELECT * FROM pg_locks WHERE  locktype = 'advisory';
+
+
 
 
 insert into account (amount) values (1000), (1000), (1000);

@@ -1,6 +1,5 @@
 package hipravin.samples.jpaid.persist.concurrency;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +12,7 @@ import java.util.concurrent.CountDownLatch;
 class JpaAccountRepositoryIT {
 
     @Autowired
-    JpaAccountRepository accountRepository;
+    JpaAccountRepository jpaAccountRepository;
     @Autowired
     JdbcAccountRepository jdbcAccountRepository;
 
@@ -24,16 +23,15 @@ class JpaAccountRepositoryIT {
 
     @Test
     void someTransfer() {
-        accountRepository.transfer(1,2, 17);
+        jpaAccountRepository.transfer(1,2, 17);
     }
 
 
     @Test
-    @RepeatedTest(10)
     void bulkTransfer() {
         CountDownLatch startLatch = new CountDownLatch(1);
-//        AccountRepository repo = accountRepository;
-        AccountRepository repo = jdbcAccountRepository;
+        AccountRepository repo = jpaAccountRepository;
+//        AccountRepository repo = jdbcAccountRepository;
         Runnable transfer1 = () -> {
             repo.transfer(1, 2, 1);
         };
@@ -41,8 +39,8 @@ class JpaAccountRepositoryIT {
             repo.transfer(2, 3, 1);
         };
         Runnable transfer3 = () -> {
-//            repo.transfer(3, 1, 1);
-            repo.transfer(1, 3, -1);
+            repo.transfer(3, 1, 1);
+//            repo.transfer(1, 3, -1);
         };
 
         int iterations = 1000;

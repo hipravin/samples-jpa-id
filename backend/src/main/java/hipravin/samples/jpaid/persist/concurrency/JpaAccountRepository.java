@@ -19,7 +19,9 @@ public class JpaAccountRepository implements AccountRepository {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED)
+//    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void transfer(long accountIdFrom, long accountIdTo, long amount) {
+//        em.createNativeQuery("SELECT pg_advisory_xact_lock(1)").getResultList();
         var query = em.createNamedQuery("AccountEntity.findByIdsIn", AccountEntity.class);
         query.setParameter("ids", List.of(accountIdFrom, accountIdTo));
         query.setLockMode(LockModeType.PESSIMISTIC_WRITE);//otherwise inconsistent data
