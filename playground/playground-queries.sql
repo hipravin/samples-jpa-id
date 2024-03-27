@@ -1,6 +1,35 @@
 create schema samplesjpaid;
 set search_path to samplesjpaid,public;
 
+--- injection
+select * from person where name = '';
+
+select * from person;
+select * from hacker;
+
+update person set amount = null where id = 2;
+--working
+
+CREATE TABLE PERSON
+(
+    ID          BIGSERIAL PRIMARY KEY,
+    NAME TEXT NOT NULL,
+    AMOUNT BIGSERIAL,
+    CONSTRAINT name_length CHECK (length(name) <= 512)
+);
+
+alter table person add column amount bigint;
+
+insert into person(name) values ('John Doe'), ('Jane Doe');
+insert into person(name) values ('O''Reilly');
+insert into person(name) values ('O"Reilly');
+
+select * from person where name like '%''%';
+
+
+select * from person where name = '%';
+
+
 select now();
 select clock_timestamp();
 
@@ -91,7 +120,6 @@ select pg_backend_pid();
 SELECT * FROM pg_locks WHERE pid = pg_backend_pid() AND locktype = 'advisory';
 
 SELECT * FROM pg_locks WHERE  locktype = 'advisory';
-
 
 
 
